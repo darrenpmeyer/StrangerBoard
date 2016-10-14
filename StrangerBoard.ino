@@ -12,6 +12,19 @@ CRGBPalette16 letterPalette;
 
 String message[] = { "HACKATHON X", "STRANGER HACKS", "THAT IS NO MOON" };
 
+/** setup() - run once at Arduino init, sets up lightmap and FastLED
+ *  
+ *  Opens Serial port at 9600, 8-N-1
+ *  Sets lightmap for a board that runs as follows:
+ *    1 row, left-to-right, 9 lights (A-I); skip 1 light
+ *    1 row, right-to-left, 9 lights (J-R, reversed); skip 1 light
+ *    1 row, left-to-right, 9 lights (S-Z and space)
+ *   
+ *  Current configuration does _not_ use the last light on the board for
+ *  the space char, but the last light of the _string_. You can change this by
+ *  commenting out the relevant assignment below. You might want that if you
+ *  want space char to be easily visible on a string with more than 27 lights.
+ */
 void setup() {
   delay(1500);  // for interrupting during startup
   Serial.begin(9600);
@@ -40,15 +53,29 @@ void setup() {
     lightmap[i] = lightmap[i-1] + 1;
   }
 
+  /* light the very last one for space... keeps it off the board.
+   * Comment it out to use the last light _on the board_ for space */
+  lightmap[26] = LED_COUNT-1;  
+
   letterPalette = PartyColors_p;
 }
 
 
+/** get_clor(light) - gets the color for a particular light number (not string index!)
+ * 
+ *  Currently, just wraps ColorFromPalette, but may someday randomize the color selection.
+ * 
+ *  return: CRGB struct for the color to use. Called from blink_letter()
+ */
 CRGB get_color(uint8_t light) {
   return ColorFromPalette(letterPalette, 255/light, 240, LINEARBLEND);
 }
 
 
+/** blink_letter(letter) - causes a letter to blink in the right place on the string
+ * 
+ *  consumes the globals 'led' and 'lightmap' to make the right LED blink.
+ */
 void blink_letter(char letter) {
   uint8_t cval = letter;
   uint8_t light = 26;  // by default, light up the "Space" light
@@ -65,22 +92,29 @@ void blink_letter(char letter) {
   else {
     light = cval-65; // change A-Z to 0-25
   }
-  delay(300);
+//  delay(300);
 
   // Now blink the right light
   led[lightmap[light]] = get_color(light);  // light this light from the lightmap
   FastLED.show();
-  FastLED.delay(300);
+  FastLED.delay(500); // how long the light is on
   Blank;
   FastLED.show();
 }
 
+
+/** blink_message(msg) - blinks a messsage one char at a time
+ * 
+ *  Calls blink_letter for each char
+ * 
+ *  return false if the message fails (e.g. too short), true otherwise
+ */
 bool blink_message(String msg) {
   msg.trim();
   if (msg.length() > 1) {
     for (uint8_t i = 0; i < msg.length(); i++) {
       blink_letter(msg.charAt(i));
-      FastLED.delay(300);  // 300ms of darkness
+      FastLED.delay(300);  // 300ms of darkness between letters
     }
     Serial.println("");
     return true;
@@ -89,6 +123,17 @@ bool blink_message(String msg) {
   return false;
 }
 
+
+/** buffer_message() - buffers message from serial input
+ *  
+ *  Reads a string terminated by \n, upper-cases it, and pushes it to the end
+ *  of the global message[] array, shifting other messages up (FIFO).
+ *  
+ *  return 0 if success, < 0 for errors
+ *  
+ *  errors: 
+ *    return -1 if message is too long (>100 chars) or too short (<3 chars)
+ */
 int buffer_message() {
   String newmessage;
 
@@ -117,6 +162,15 @@ int buffer_message() {
   return 0;
 }
 
+/** errorflash(times, gap, color) - flash the whole string to indicate a status
+ *  
+ *  this should probably be "statusflash", but eh.
+ *  
+ *  Blinks the string 'color', 'times' times, with each on/off cycle lasting 'gap' ms.
+ *  
+ *  So errorflash(5, 100, CRGB::Blue) would flash the string blue 5 times; each flash would be
+ *  50ms on and 50ms off.
+ */
 void errorflash(uint8_t times, unsigned int gap, CRGB color) {
   Blank;
   
@@ -130,6 +184,19 @@ void errorflash(uint8_t times, unsigned int gap, CRGB color) {
   }
 }
 
+
+/** loop() - main Arduino event loop, called repeatedly
+ *  
+ *  Cycles through each item in message[] and displays it using 'blink_message'
+ *  
+ *  If there is serial data available between messages, adds it to the queue;
+ *  blinks green twice when new message is inserted, red 5 times if there's an
+ *  error inserting it.
+ *  
+ *  Because the serial interrupt is processed between messages, only the last message
+ *  sent during display will be queued. Clients have to wait for a queue confirmation
+ *  before sending the next message.
+ */
 void loop() {
   static uint8_t m_idx = 0;
 
@@ -147,7 +214,7 @@ void loop() {
     }
   }
   
-  if (blink_message(message[m_idx])) { FastLED.delay(1200); } // delay between messages, only if message was displayed
+  if (blink_message(message[m_idx])) { FastLED.delay(1800); } // delay between messages, only if message was displayed
 
   m_idx++;
   if (m_idx >= arraysize(message)) { m_idx = 0; }
