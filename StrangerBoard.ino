@@ -18,10 +18,11 @@ uint8_t lightmap[27];
 /** load the "Stranger Things" inspired LED color map into program memory, it shouldn't change
  *  The lines are long because each row maps to a row in the Stranger Things version of the board
  */
-const PROGMEM CRGB stranger_map[27] = {
+const CRGB stranger_map[27] = {
   CRGB::White, CRGB::Blue, CRGB::Magenta, CRGB::Red, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Blue,
   CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta, CRGB::Blue, CRGB::Magenta,
   CRGB::Green, CRGB::White, CRGB::Yellow, CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta
+  CRGB::Red
 };
 
 
