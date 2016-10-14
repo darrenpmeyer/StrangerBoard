@@ -1,6 +1,12 @@
 #include <FastLED.h>
 
+/** Configuration **/
 #define LED_COUNT 50
+#define LED_DATA_PIN 9      // data pin for WS281x data+clock line
+#define TIME_LETTERON 500   // ms to leave lights on for blink_letter
+#define TIME_LETTEROFF 300  // ms to leave blank between letters
+#define TIME_BOARDOFF 1800  // ms to leave board blank between messages
+
 
 CRGB led[LED_COUNT];
 uint8_t lightmap[27];
@@ -38,7 +44,7 @@ void setup() {
   delay(1500);  // for interrupting during startup
   Serial.begin(9600);
   
-  FastLED.addLeds<WS2812, 9, RGB>(led, LED_COUNT); // Pin 9, RGB light order
+  FastLED.addLeds<WS2812, LED_DATA_PIN, RGB>(led, LED_COUNT);
   Blank;
   FastLED.show();
 
@@ -90,7 +96,6 @@ CRGB get_color(uint8_t light) {
 void blink_letter(char letter) {
   uint8_t cval = letter;
   uint8_t light = 26;  // by default, light up the "Space" light
-//  CRGB color = CRGB::Blue;
 
   Serial.print(letter);
   
@@ -103,12 +108,11 @@ void blink_letter(char letter) {
   else {
     light = cval-65; // change A-Z to 0-25
   }
-//  delay(300);
 
   // Now blink the right light
   led[lightmap[light]] = get_color(light);  // light this light from the lightmap
   FastLED.show();
-  FastLED.delay(500); // how long the light is on
+  FastLED.delay(TIME_LETTERON);
   Blank;
   FastLED.show();
 }
@@ -125,7 +129,7 @@ bool blink_message(String msg) {
   if (msg.length() > 1) {
     for (uint8_t i = 0; i < msg.length(); i++) {
       blink_letter(msg.charAt(i));
-      FastLED.delay(300);  // 300ms of darkness between letters
+      FastLED.delay(TIME_LETTEROFF); // Leave the board blank between letters
     }
     Serial.println("");
     return true;
@@ -152,15 +156,9 @@ int buffer_message() {
     newmessage = Serial.readStringUntil('\n');
     newmessage.toUpperCase();
     newmessage.trim();
-//    Serial.print("New message: ");
-//    Serial.println(newmessage);
   }
 
   if (newmessage.length() > 100 || newmessage.length() < 3) {
-    Serial.print("Message "); Serial.print(newmessage);
-    Serial.print(" too long or short ("); Serial.print(newmessage.length()); Serial.print(" chars)");
-    Serial.println();
-    delay(300); 
     return -1;  // message too long or short
     //TODO more precice errors
   }
@@ -225,7 +223,7 @@ void loop() {
     }
   }
   
-  if (blink_message(message[m_idx])) { FastLED.delay(1800); } // delay between messages, only if message was displayed
+  if (blink_message(message[m_idx])) { FastLED.delay(TIME_BOARDOFF); } // delay between messages, only if message was displayed
 
   m_idx++;
   if (m_idx >= arraysize(message)) { m_idx = 0; }
