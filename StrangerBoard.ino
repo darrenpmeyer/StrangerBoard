@@ -4,10 +4,19 @@
 
 CRGB led[LED_COUNT];
 uint8_t lightmap[27];
-CRGBPalette16 letterPalette;
+//CRGBPalette16 letterPalette;
 
 #define Blank fill_solid(led, LED_COUNT, CRGB::Black)
 #define arraysize(x) sizeof(x)/sizeof(x[0])
+
+/** load the "Stranger Things" inspired LED color map into program memory, it shouldn't change
+ *  The lines are long because each row maps to a row in the Stranger Things version of the board
+ */
+const PROGMEM CRGB stranger_map[27] = {
+  CRGB::White, CRGB::Blue, CRGB::Magenta, CRGB::Red, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Blue,
+  CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta, CRGB::Blue, CRGB::Magenta,
+  CRGB::Green, CRGB::White, CRGB::Yellow, CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta
+};
 
 
 String message[] = { "HACKATHON X", "STRANGER HACKS", "THAT IS NO MOON" };
@@ -57,18 +66,20 @@ void setup() {
    * Comment it out to use the last light _on the board_ for space */
   lightmap[26] = LED_COUNT-1;  
 
-  letterPalette = PartyColors_p;
+//  letterPalette = RainbowColors_p;
 }
 
 
 /** get_clor(light) - gets the color for a particular light number (not string index!)
  * 
- *  Currently, just wraps ColorFromPalette, but may someday randomize the color selection.
+ *  Uses the right colors for a given letter from the Stranger Things show
+ *  see https://i.imgur.com/VJapZLS.jpg
  * 
  *  return: CRGB struct for the color to use. Called from blink_letter()
  */
 CRGB get_color(uint8_t light) {
-  return ColorFromPalette(letterPalette, 255/light, 240, LINEARBLEND);
+  return stranger_map[light];
+//  return ColorFromPalette(letterPalette, 255/light, 240, LINEARBLEND);
 }
 
 
