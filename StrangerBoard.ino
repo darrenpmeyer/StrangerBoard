@@ -21,7 +21,7 @@ uint8_t lightmap[27];
 const CRGB stranger_map[27] = {
   CRGB::White, CRGB::Blue, CRGB::Magenta, CRGB::Red, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Blue,
   CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta, CRGB::Blue, CRGB::Magenta,
-  CRGB::Green, CRGB::White, CRGB::Yellow, CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta
+  CRGB::Green, CRGB::White, CRGB::Yellow, CRGB::Blue, CRGB::Magenta, CRGB::Blue, CRGB::Yellow, CRGB::Magenta, CRGB::Magenta,
   CRGB::Red
 };
 
